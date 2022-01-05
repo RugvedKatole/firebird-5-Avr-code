@@ -85,7 +85,7 @@ def all_valid_trails(graph, node_set, len_max, folder):
 
 class TPBP:
 
-    def __init__(self, graph, priority_nodes, time_periods, coefficients, num_dummy_nodes, reshuffle_time, path_to_folder):
+    def __init__(self, graph, priority_nodes, time_periods, coefficients, path_to_folder):
         '''Initializes class TPBP with required ros paramenters  i.e time periods,dummy nodes reshuffle time,etc '''
         self.ready = False
         rospy.Service('algo_ready', AlgoReady, self.callback_ready)
@@ -98,17 +98,17 @@ class TPBP:
             self.graph.nodes[node]['idleness'] = 0.     #adding a idleness parameter to nodes
         self.stamp = 0.         #initializing time stamp to 0
 
-        self.num_dummy_nodes = num_dummy_nodes #Number of dummy nodes
-        self.reshuffle_time = reshuffle_time #Expected Time between reshuffles
-        self.dummy_time_period = [self.time_periods[0]] * self.num_dummy_nodes
-        self.time_periods.extend(self.dummy_time_period)        
+        #self.num_dummy_nodes = num_dummy_nodes #Number of dummy nodes
+        #self.reshuffle_time = reshuffle_time #Expected Time between reshuffles
+        #self.dummy_time_period = [self.time_periods[0]] * self.num_dummy_nodes
+        #self.time_periods.extend(self.dummy_time_period)        
         self.nodes = list(self.graph.nodes())
         self.non_priority_nodes = [item for item in self.nodes if item not in self.priority_nodes]  # all nodes which are not in priority nodes
-        self.dummy_nodes = np.random.choice(self.non_priority_nodes, self.num_dummy_nodes) #selecting dummy nodes at random from non-priority nodes
+        #self.dummy_nodes = np.random.choice(self.non_priority_nodes, self.num_dummy_nodes) #selecting dummy nodes at random from non-priority nodes
         self.priority_nodes_cur = self.priority_nodes[:]            #list of current priority nodes
-        self.priority_nodes_cur.extend(self.dummy_nodes)            # adding dummy nodes to priority nodes list
+        #self.priority_nodes_cur.extend(self.dummy_nodes)            # adding dummy nodes to priority nodes list
         self.priority_nodes_prev = self.priority_nodes_cur[:]
-        self.reshuffle_next = np.random.poisson(self.reshuffle_time)
+        #self.reshuffle_next = np.random.poisson(self.reshuffle_time)
         self.non_priority_nodes = [item for item in self.nodes if item not in self.priority_nodes_cur]  #choosing dummy nodes other than current
 
 
@@ -170,6 +170,7 @@ class TPBP:
                 self.graph.nodes[n]['idleness'] = 0.
 
         #Randomization Code
+        '''
         if self.stamp >= self.reshuffle_next:
             self.reshuffle_next = self.stamp + numpy.random.poisson(self.reshuffle_time)
             self.dummy_nodes = numpy.random.choice(self.non_priority_nodes, self.num_dummy_nodes)
@@ -183,7 +184,7 @@ class TPBP:
                 self.assigned[len(self.priority_nodes) + i] = False
                 if n in self.priority_nodes_prev:
                     n_prev = self.priority_nodes_prev.index(n)
-                    self.assigned[len(self.priority_nodes) + i] = self.assigned_prev[n_prev]
+                    self.assigned[len(self.priority_nodes) + i] = self.assigned_prev[n_prev]'''
 
     def callback_next_task(self, req):
         t = req.stamp
@@ -271,10 +272,10 @@ if __name__ == '__main__':
     time_periods = list(map(float, rospy.get_param('/time_periods').split(' ')))
     coefficients = list(map(float, rospy.get_param('/coefficients').split(' ')))
     folder = rospy.get_param('/random_string')
-    num_dummy_nodes = rospy.get_param('/num_dummy_nodes')
-    reshuffle_time = rospy.get_param('/reshuffle_time')
+    #num_dummy_nodes = rospy.get_param('/num_dummy_nodes')
+    #reshuffle_time = rospy.get_param('/reshuffle_time')
     path_to_folder = dirname + '/outputs/' + folder
-    s = TPBP(g, priority_nodes, time_periods, coefficients, num_dummy_nodes, reshuffle_time, path_to_folder)
+    s = TPBP(g, priority_nodes, time_periods, coefficients, path_to_folder)
 
     rospy.Subscriber('at_node', AtNode, s.callback_idle)
     rospy.Service('bot_next_task', NextTaskBot, s.callback_next_task)
