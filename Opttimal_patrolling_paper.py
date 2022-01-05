@@ -28,7 +28,7 @@ def DFSUtil(Graph, v, visited):
 def DFS (Graph):
     '''This function takes a graph as input and return its Depth First Search
     # It uses recursive DFSUtil'''
-    # create a set to store all visited vertices
+    # create a list to store all visited vertices
     visited = list()
         # call the recursive helper function to print DFS traversal starting from all
         # vertices one by one
@@ -68,7 +68,7 @@ wg=[]
 for i in range(len(G)):
   cur=G[0]
   #dist=nx.dijkstra_path_length(GraphML, cur, G[i], weight = 'length')   #Dijkstra path lenght funtion
-  dist = (i)*100 #lenght of each edge is 100 which is added in chain graph.
+  dist = (i)*100  #lenght of each edge is 100 which is added in chain graph.
   wg.append(dist)
 #G=range(len(G))
 G=list(map(int,G))
@@ -77,7 +77,7 @@ elist=[]
 for i in range(len(G)-1):
   #elist.append((G[i],G[i+1],wg[i+1]))
   elist.append((G[i],G[i+1]))
-#print(elist)
+#print("edgelist= ",elist)
 Graph=nx.Graph()
 #Graph.add_weighted_edges_from(elist)
 Graph.add_edges_from(elist)
@@ -85,8 +85,10 @@ j=0
 for i in Graph.nodes():
   Graph.nodes[i]["lenght"]=100*j
   j+=1
-
+#print(Graph.edges(data=True))
 #print(Graph.nodes(data=True))
+
+'''setting the parameters for partitioning'''
 a=0
 delta=100
 epsilon=0.01
@@ -101,23 +103,24 @@ while (b-a)>2*epsilon:
     break
   if len(pi)>m:
     a=l
-    l=(a+b)/2
+    l = (a + b)/2
 #    print(pi)
   else:
 #    print(pi)
     pis=[]
-    for i in pi:
+    #for i in pi:
       #pis.append(Graph.edge_subgraph(i))
-      pis.append(Graph.subgraph(i))
+      #pis.append(Graph.subgraph(i))
+    pis.append(pi)
     b=l
     l=(a+b)/2
 
-for i in pis:
-  print(i.edges())
-  #print(i.nodes())
+for i in pis[0]:
+  #print(i.edges())
+  print(i)
 
 
-'''
-print(Graph.edges(data=True))
-nx.draw(Graph, pos=nx.spring_layout(Graph), node_color='r', edge_color='b')
-plt.show()'''
+
+#print(Graph.edges(data=True))
+#nx.draw(GraphML)
+#plt.show()
