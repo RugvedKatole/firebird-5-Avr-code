@@ -2,10 +2,14 @@ import networkx as nx
 import numpy as np
 from collections import defaultdict
 from matplotlib import pyplot as plt
+import sys
 
-#some comment
-Graph_path= input("please provide the path to GraphML file ")
-no_off_agents= int(input("Please provide number of agents no "))
+'''add average idealness and max idealness and print walk.'''
+
+#Graph_path= input("please provide the path to GraphML file ")
+Graph_path = sys.argv[1]
+#no_off_agents= int(input("Please provide number of agents no "))
+no_off_agents = int(sys.argv[2])
 GraphML= nx.read_graphml(Graph_path)          #Reading the GraphML file from the given input path
 
 def DFSUtil(Graph, v, visited):
@@ -34,18 +38,20 @@ def DFS (Graph):
     return visited
 
 def partition(G,l):
-  Weight="weight"
+  Weight = "lenght"
   a=0
   pi=[]
   #print("l= ",l)
   while a<wg[-1]:
-    p=[(u,v) for (u,v,d) in G.edges(data=True) if d[Weight] <=(a+l) and d[Weight] >=a]
+    #p = [(u,v) for (u,v,d) in G.edges(data=True) if d[Weight] <=(a+l) and d[Weight] >=a]
+    p = [(u) for (u,d) in G.nodes(data=True) if d[Weight] <=(a+l) and d[Weight] >=a]
     pi.append(p)
     #print(pi)
-    a =[(u,v) for (u,v,d) in G.edges(data=True) if d[Weight]>=(a+l)]
-    c=[]
-    for u,v in a:
-      c.append(G.get_edge_data(u,v).get(Weight))
+    #a =[(u,v) for (u,v,d) in G.edges(data=True) if d[Weight]>=(a+l)]
+    a = [(u) for (u,d) in G.nodes(data = True) if d[Weight] >= (a+l)]
+    c = []
+    for u in a:
+      c.append(G.nodes[u][Weight])
     #print("c=",c)
     if len(c)==0:
       return pi
@@ -61,23 +67,31 @@ G=DFS(GraphML)
 wg=[]
 for i in range(len(G)):
   cur=G[0]
-  dist=nx.dijkstra_path_length(GraphML, cur, G[i], weight = 'length')
+  #dist=nx.dijkstra_path_length(GraphML, cur, G[i], weight = 'length')   #Dijkstra path lenght funtion
+  dist = (i)*100 #lenght of each edge is 100 which is added in chain graph.
   wg.append(dist)
 #G=range(len(G))
 G=list(map(int,G))
 wg=list(map(int,wg))
 elist=[]
 for i in range(len(G)-1):
-  elist.append((G[i],G[i+1],wg[i+1]))
+  #elist.append((G[i],G[i+1],wg[i+1]))
+  elist.append((G[i],G[i+1]))
 #print(elist)
 Graph=nx.Graph()
-Graph.add_weighted_edges_from(elist)
-#print(Graph.edges(data=True))
+#Graph.add_weighted_edges_from(elist)
+Graph.add_edges_from(elist)
+j=0
+for i in Graph.nodes():
+  Graph.nodes[i]["lenght"]=100*j
+  j+=1
+
+#print(Graph.nodes(data=True))
 a=0
 delta=100
 epsilon=0.01
 m=no_off_agents
-weight="weight"
+weight="lenght"
 b=(wg[-1]+delta)/m
 l=(a+b)/2
 while (b-a)>2*epsilon:
@@ -93,12 +107,16 @@ while (b-a)>2*epsilon:
 #    print(pi)
     pis=[]
     for i in pi:
-      pis.append(Graph.edge_subgraph(i))
+      #pis.append(Graph.edge_subgraph(i))
+      pis.append(Graph.subgraph(i))
     b=l
     l=(a+b)/2
 
 for i in pis:
   print(i.edges())
+  #print(i.nodes())
+
+
 '''
 print(Graph.edges(data=True))
 nx.draw(Graph, pos=nx.spring_layout(Graph), node_color='r', edge_color='b')
