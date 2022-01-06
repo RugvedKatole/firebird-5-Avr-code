@@ -4,7 +4,6 @@ from collections import defaultdict
 from matplotlib import pyplot as plt
 import sys
 
-'''add average idealness and max idealness and print walk.'''
 
 #Graph_path= input("please provide the path to GraphML file ")
 Graph_path = sys.argv[1]
@@ -89,13 +88,13 @@ for i in Graph.nodes():
 #print(Graph.nodes(data=True))
 
 '''setting the parameters for partitioning'''
-a=0
-delta=100
-epsilon=0.01
-m=no_off_agents
-weight="lenght"
-b=(wg[-1]+delta)/m
-l=(a+b)/2
+a = 0
+delta = 100
+epsilon = 0.01
+m = no_off_agents
+weight = "lenght"
+b = (wg[-1]+delta)/m
+l = (a+b)/2
 while (b-a)>2*epsilon:
   pi = partition(Graph,l)
   if pi==None:
@@ -112,12 +111,60 @@ while (b-a)>2*epsilon:
       #pis.append(Graph.edge_subgraph(i))
       #pis.append(Graph.subgraph(i))
     pis.append(pi)
-    b=l
-    l=(a+b)/2
+    b = l
+    l = (a+b)/2
 
 for i in pis[0]:
   #print(i.edges())
   print(i)
+
+#idelness
+#MAX idealness
+max_idle = -np.inf
+for i in pis[0]:
+  idle = (len(i)-1)*20
+  if idle > max_idle:
+    max_idle = idle
+
+print("Max Idelness =",max_idle, "seconds")
+
+#average Idealness 
+'''adding idleness key to graphs'''
+for i in Graph.nodes():
+  Graph.nodes[i]["idleness"]=0
+
+def update_idleness(graph,node_list,cur_node):
+  sum_idle=0
+  for i in node_list:
+    if i==cur_node:
+      graph.nodes[i]["idleness"] = 0
+    else:
+      graph.nodes[i]["idleness"] += 10
+      sum_idle += graph.nodes[i]["idleness"]
+  return sum_idle
+  
+
+average_idle=0
+
+for i in pis[0]:
+  I = 0
+  for j in i[1:]:
+    sum_idle1 = update_idleness(Graph,i,j) #sum of instaneous idleness of a partition at every timestep of 10s I=sumation(I(t))
+    I += sum_idle1    
+  i.reverse()
+  for j in i[1:]:
+    sum_idle2=update_idleness(Graph,i,j)  #same thing for returning to start node
+    I += sum_idle2
+  try:
+    average_idle += I/(len(i)*(len(i)-1)*20)  # average graph idleness I=sumation(I(t))/no_of_nodes/total_time in each partition
+  except (ZeroDivisionError):
+    continue
+
+
+print("Average graph idleness =",average_idle,"seconds")
+  
+
+
 
 
 
