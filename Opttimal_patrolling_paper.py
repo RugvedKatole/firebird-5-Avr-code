@@ -2,6 +2,7 @@
 
 
 import networkx as nx
+from networkx.readwrite.graphml import GraphML
 import numpy as np
 from mrpp_sumo.srv import NextTaskBot, NextTaskBotResponse, AlgoReady, AlgoReadyResponse
 from mrpp_sumo.msg import AtNode
@@ -11,10 +12,11 @@ import rospkg
 
 """we need DFS tour not justs search"""
 ''' add call back next task'''
-'''
+
 Graph_path = sys.argv[1]
 no_off_agents = int(sys.argv[2])
-graphML= nx.read_graphml(Graph_path) '''         #Reading the graphML file from the given input path
+graphML= nx.read_graphml(Graph_path)       #Reading the graphML file from the given input path
+
 def DFSUtil(Graph, v, visited):
     '''The helper Recursive Function for DFS traversel'''
         # Mark the current node as visited and print it
@@ -24,8 +26,9 @@ def DFSUtil(Graph, v, visited):
         # recur for all the vertices adjacent to this vertex
     for neighbour in Graph.neighbors(v):
         if neighbour not in visited:
-            DFSUtil(Graph,neighbour, visited)
-        
+            visited = DFSUtil(Graph,neighbour, visited)
+    if visited[-1] != v:
+      visited.append(v)
     return visited
 
 
@@ -38,7 +41,7 @@ def DFS (Graph):
         # vertices one by one
     for vertex in Graph.nodes:
         if vertex not in visited:
-            DFSUtil(Graph,vertex, visited)
+            visited = DFSUtil(Graph,vertex, visited)
     return visited
 
 def partition(g,wg,l):
@@ -87,17 +90,7 @@ def optimal_partition(graphML,m):
       l = (a+b)/2
   return pis
 
-'''
-def callback_idle(self, data):
-  if self.stamp < data.stamp:
-    dev = data.stamp - self.stamp
-    self.stamp = data.stamp
-    for n in range(num_bots):
-      for i in self.nodes:
-        self.robots['bot_{}'.format(n)][i] += dev
-                
-    for i, n in enumerate(data.robot_id):
-      self.robots[n][data.node_id[i]] = 0.'''
+
 
 class OPP:
 
