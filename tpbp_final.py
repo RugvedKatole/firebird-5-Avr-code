@@ -218,7 +218,7 @@ class TPBP:
                         if r > best_reward:
                             best_reward = r
                             next_walk = line2
-        
+        '''
         if all(self.assigned):
             print ('alive')
             idles = []
@@ -248,7 +248,7 @@ class TPBP:
             next_walk = nx.dijkstra_path(g, node, dest_node, 'length')
         
         else:
-            self.assigned[self.priority_nodes.index(next_walk[-1])] = True
+            self.assigned[self.priority_nodes.index(next_walk[-1])] = True'''
 
         next_departs = [t] * (len(next_walk) - 1)
         
