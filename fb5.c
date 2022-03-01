@@ -27,7 +27,7 @@ long int ShaftCountLeftPrev = 0;	//to keep track of left position encoder
 long int ShaftCountRight = 0;		//to keep track of right position encoder
 long int ShaftCountRightPrev = 0;	//to keep track of right position encoder
 
-unsigned char data;				//to store received data from UDR1
+unsigned char data;				//to store received data from UDR2
 unsigned char incomingByte;	
 int packet_cnt=0,packet_len=4; 
 char d[4]; 
@@ -133,12 +133,12 @@ unsigned char ADC_Conversion(unsigned char Ch)
 }
 
 // This Function calculates the actual distance in millimeters(mm) from the input
-// analog value of Sharp Sensor. 
-unsigned int Sharp_GP2D12_estimation(unsigned char adc_reading)
+// analog value of Sharp Sensor. range 40 mm to 300 mm
+unsigned int Sharp_GP2D120_estimation(unsigned char adc_reading)
 {
 	float distance;
 	unsigned int distanceInt;
-	distance = (int)(10.00*(2799.6*(1.00/(pow(adc_reading,1.1546)))));
+	distance = (int)(10.00*(1/(0.001240875*adc_reading + 0.005)));
 	distanceInt = (int)distance;
 	if(distanceInt>800)
 	{
@@ -182,8 +182,8 @@ void timer5_init()
 	OCR5CH = 0x00;	//Output compare register high value for Motor C1
 	OCR5CL = 0xFF;	//Output compare register low value for Motor C1
 	TCCR5A = 0xA9;	/*{COM5A1=1, COM5A0=0; COM5B1=1, COM5B0=0; COM5C1=1 COM5C0=0}
- 																						For Overriding normal port functionality to OCRnA outputs.
-				  																		{WGM51=0, WGM50=1} Along With WGM52 in TCCR5B for Selecting FAST PWM 8-bit Mode*/
+	For Overriding normal port functionality to OCRnA outputs.
+	{WGM51=0, WGM50=1} Along With WGM52 in TCCR5B for Selecting FAST PWM 8-bit Mode*/
 	
 	TCCR5B = 0x0B;	//WGM12=1; CS12=0, CS11=1, CS10=1 (Prescaler=64)
 }
@@ -294,15 +294,14 @@ void init_devices()
 {
  cli();				//Clears the global interrupts
  port_init();		//Initializes all the ports
- uart2_init();
+ uart2_init();		//Initailize UART2 for serial communiaction
  adc_init();
  timer5_init();
  timer4_init();
  TIMSK4 = 0x01;    //Enables the overflow interrupt.
  left_position_encoder_interrupt_init();
  right_position_encoder_interrupt_init();
- 																				//Initailize UART1 for serial communiaction
- sei();																			//Enables the global interrupts
+ sei();				//Enables the global interrupts
 }
 
 //If this doesn't work then an interrupt can also be used. Refer page 106 of Software Manual
@@ -341,23 +340,27 @@ USART_Transmit(ShaftCountRight/256);	//Sending the 4 bytes of encoder data.
 USART_Transmit(ShaftCountRight%256);
 USART_Transmit(ShaftCountLeft/256);
 USART_Transmit(ShaftCountLeft%256);
+chksum=ShaftCountRight/256+ShaftCountRight%256+ShaftCountLeft/256+ShaftCountLeft%256; 
+USART_Transmit(chksum);	//Send the calculated checksum for comparison and accuracy check.
 
 // sharp = ADC_Conversion(11);						//Stores the Analog value of front sharp connected to ADC channel 11 into variable "sharp"
 // value = Sharp_GP2D12_estimation(sharp);				//Stores Distance calsulated in a variable "value".
-// USART_Transmit(value);
-chksum=ShaftCountRight/256+ShaftCountRight%256+ShaftCountLeft/256+ShaftCountLeft%256; 
-USART_Transmit(chksum);					//Send the calculated checksum for comparison and accuracy check.
+// USART_Transmit(value/256);
+// USART_Transmit(value%256);
+				
 
 //ADC channel 4,5,6,7,8,9,10 are 7 IR proximity sensors and channel 11 is Sharp IR snesor
 //Transmitting sensor data 
-USART_Transmit(ADC_Conversion(4));
-USART_Transmit(ADC_Conversion(5));
-USART_Transmit(ADC_Conversion(6));
-USART_Transmit(ADC_Conversion(7));
-USART_Transmit(ADC_Conversion(8));
-USART_Transmit(ADC_Conversion(9));
-USART_Transmit(ADC_Conversion(10));
-USART_Transmit(ADC_Conversion(11));
+USART_Transmit(ADC_Conversion(14)/256);
+USART_Transmit(ADC_Conversion(14)%256);
+
+// USART_Transmit(ADC_Conversion(5));
+// USART_Transmit(ADC_Conversion(6));
+// USART_Transmit(ADC_Conversion(7));
+// USART_Transmit(ADC_Conversion(8));
+// USART_Transmit(ADC_Conversion(9));
+// USART_Transmit(ADC_Conversion(10));
+// USART_Transmit(ADC_Conversion(11));
 
 
 }
@@ -397,28 +400,28 @@ int main(void)
 	while(1)
 	{	
 		// BATT_Voltage = 0.55;
-		BATT_Voltage = ADC_Conversion(0);
-		// BATT_Voltage = (((ADC_Conversion(0)*100)*0.07902) + 0.7)/12;
+		// BATT_Voltage = ADC_Conversion(0);
+		BATT_Voltage = (((ADC_Conversion(0))*0.07902) + 0.7)/15;
 		
-		if (BATT_Voltage < 0.20){
+		if (BATT_Voltage < 0.50){
 			PORTJ = 0x80; //Output is set to 1 bar
 		}
-		else if (BATT_Voltage < 0.40){
+		else if (BATT_Voltage < 0.60){
 			PORTJ = 0xC0; //Output is set to 2 bars
 		}
-		else if (BATT_Voltage < 0.50){
+		else if (BATT_Voltage < 0.65){
 			PORTJ = 0xE0; //Output is set to 3 bars
 		}
-		else if (BATT_Voltage < 0.60){
+		else if (BATT_Voltage < 0.70){
 			PORTJ = 0xF0; //Output is set to 4 bars
 		}
-		else if (BATT_Voltage < 0.70){
+		else if (BATT_Voltage < 0.75){
 			PORTJ = 0xF8; //Output is set to 5 bars
 		}
 		else if (BATT_Voltage < 0.80){
 			PORTJ = 0xFC; //Output is set to 6 bars
 		}
-		else if (BATT_Voltage < 0.90){
+		else if (BATT_Voltage < 0.85){
 			PORTJ = 0xFE; //Output is set to 7 bars
 		}
 		else {
