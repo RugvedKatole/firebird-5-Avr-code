@@ -3,7 +3,9 @@
 Install the following modules using commands given
 
 Linux
+
 `sudo apt install avr-libc`
+
 `sudo apt install avrdude`
 
 ## Compiling
@@ -13,7 +15,9 @@ Open Terminal and Run following
 `make`
 ## set fuses
 Use following commands change the high fuse and low fuse to right setting
+
 `avrdude -c usbasp -p m2560 -U lfuse:w:0xFF:m`
+
 `avrdude -c usbasp -p m2560 -U hfuse:w:0xDB:m`
 
 ## upload hex fire to ATMEGA2560
