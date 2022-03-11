@@ -18,5 +18,7 @@ Use following commands change the high fuse and low fuse to right setting
 
 ## upload hex fire to ATMEGA2560
 `avrdude -c usbasp -p m2560 -U flash:w:<name of c file>.hex -B5`
+
 For example
+
 `avrdude -c usbasp -p m2560 -U flash:w:fb5.hex -B5`
