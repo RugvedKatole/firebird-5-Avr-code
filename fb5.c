@@ -134,7 +134,7 @@ unsigned char ADC_Conversion(unsigned char Ch)
 
 // This Function calculates the actual distance in millimeters(mm) from the input
 // analog value of Sharp Sensor. range 40 mm to 300 mm
-unsigned int Sharp_GP2D120_estimation(unsigned char adc_reading)
+unsigned int Sharp_GP2D12_estimation(unsigned char adc_reading)
 {
 	float distance;
 	unsigned int distanceInt;
@@ -347,20 +347,41 @@ USART_Transmit(chksum);	//Send the calculated checksum for comparison and accura
 // value = Sharp_GP2D12_estimation(sharp);				//Stores Distance calsulated in a variable "value".
 // USART_Transmit(value/256);
 // USART_Transmit(value%256);
+
+//Transmiting Proximity Sensor data located on channel 4,5,6,7,8 covering 180 deg(left to right) on front side of robot 
 				
+USART_Transmit(ADC_Conversion(4)/256);
+USART_Transmit(ADC_Conversion(4)%256);
 
-//ADC channel 4,5,6,7,8,9,10 are 7 IR proximity sensors and channel 11 is Sharp IR snesor
-//Transmitting sensor data 
-USART_Transmit(ADC_Conversion(14)/256);
-USART_Transmit(ADC_Conversion(14)%256);
+USART_Transmit(ADC_Conversion(5)/256);
+USART_Transmit(ADC_Conversion(5)%256);
 
-// USART_Transmit(ADC_Conversion(5));
-// USART_Transmit(ADC_Conversion(6));
-// USART_Transmit(ADC_Conversion(7));
-// USART_Transmit(ADC_Conversion(8));
-// USART_Transmit(ADC_Conversion(9));
-// USART_Transmit(ADC_Conversion(10));
-// USART_Transmit(ADC_Conversion(11));
+// USART_Transmit(ADC_Conversion(6)/256);   //useless sensor
+// USART_Transmit(ADC_Conversion(6)%256);
+
+USART_Transmit(ADC_Conversion(7)/256);
+USART_Transmit(ADC_Conversion(7)%256);
+
+USART_Transmit(ADC_Conversion(8)/256);
+USART_Transmit(ADC_Conversion(8)%256);
+
+// Transmiting sharp IR sensor reading in mm 
+
+sharp = ADC_Conversion(11);						//Stores the Analog value of front sharp connected to ADC channel 11 into variable "sharp"
+value = Sharp_GP2D12_estimation(sharp);				//Stores Distance calsulated in a variable "value".
+USART_Transmit(value/256);
+USART_Transmit(value%256);
+
+// Transmiting White Line Sensor Data Channel (1,2, 3)
+
+USART_Transmit(ADC_Conversion(1)/256);   //right WL sensor
+USART_Transmit(ADC_Conversion(1)%256);
+
+USART_Transmit(ADC_Conversion(2)/256);    // middle Wl sensor
+USART_Transmit(ADC_Conversion(2)%256);
+
+USART_Transmit(ADC_Conversion(3)/256);    //left WL sensor
+USART_Transmit(ADC_Conversion(3)%256);
 
 
 }
@@ -401,27 +422,28 @@ int main(void)
 	{	
 		// BATT_Voltage = 0.55;
 		// BATT_Voltage = ADC_Conversion(0);
-		BATT_Voltage = (((ADC_Conversion(0))*0.07902) + 0.7)/15;
+		// BATT_Voltage = (((ADC_Conversion(0))*0.046));
+		BATT_Voltage = ((ADC_Conversion(0)*100)*0.07902) + 0.7;	//Prints Battery Voltage Status
 		
-		if (BATT_Voltage < 0.50){
+		if (BATT_Voltage < 0x28A){
 			PORTJ = 0x80; //Output is set to 1 bar
 		}
-		else if (BATT_Voltage < 0.60){
+		else if (BATT_Voltage < 0x2BC){
 			PORTJ = 0xC0; //Output is set to 2 bars
 		}
-		else if (BATT_Voltage < 0.65){
+		else if (BATT_Voltage < 0x2EE){
 			PORTJ = 0xE0; //Output is set to 3 bars
 		}
-		else if (BATT_Voltage < 0.70){
-			PORTJ = 0xF0; //Output is set to 4 bars
+		else if (BATT_Voltage < 0x320){
+			PORTJ = 0xF0; //Output is set to 4 bars34                                                                                     
 		}
-		else if (BATT_Voltage < 0.75){
+		else if (BATT_Voltage < 0x352){
 			PORTJ = 0xF8; //Output is set to 5 bars
 		}
-		else if (BATT_Voltage < 0.80){
+		else if (BATT_Voltage < 0x384){
 			PORTJ = 0xFC; //Output is set to 6 bars
 		}
-		else if (BATT_Voltage < 0.85){
+		else if (BATT_Voltage < 0x3B6){
 			PORTJ = 0xFE; //Output is set to 7 bars
 		}
 		else {
